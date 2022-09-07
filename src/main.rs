@@ -1,5 +1,6 @@
 #![feature(iter_intersperse)]
 
+use std::env;
 use std::fs;
 use std::path::PathBuf;
 
@@ -19,8 +20,6 @@ struct Args {
     file: String,
     #[clap(short, long, value_parser, help("Output file path"))]
     out: Option<String>,
-    #[clap(short, long, value_parser, default_value = "", help("Output directory"))]
-    dir: String,
     #[clap(
         long,
         action,
@@ -36,24 +35,16 @@ fn main() {
 
     let src = match fs::read_to_string(&args.file) {
         Ok(s) => s,
-        Err(err) => panic!("{err}"),
+        Err(err) => panic!("cannot open '{inp}': {err}", inp = inp_file.to_string_lossy()),
     };
 
     let html = render(&src, !args.r#unsafe);
 
-    let out_file = args.out.map_or_else(
-        || {
-            let mut out = PathBuf::from(args.dir);
-            out.push(inp_file);
-            out.set_extension("html");
-            out
-        },
-        PathBuf::from,
-    );
+    let out_file = args.out.map_or_else(|| inp_file.with_extension("html"), PathBuf::from);
 
-    match fs::write(out_file, html) {
+    match fs::write(&out_file, html) {
         Ok(()) => {}
-        Err(err) => panic!("{err}"),
+        Err(err) => panic!("cannot write to '{out}': {err}", out = out_file.to_string_lossy()),
     }
 }
 
