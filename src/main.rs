@@ -13,12 +13,14 @@ mod safe;
 mod wiki;
 
 #[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
+#[clap(version, about = "Markdown-to-HTML with minimal wiki-like extensions", long_about = None)]
 struct Args {
     #[clap(value_parser)]
     file: String,
+    #[clap(short, long, value_parser, help("Output file path"))]
+    out: Option<String>,
     #[clap(short, long, value_parser, default_value = "", help("Output directory"))]
-    outdir: String,
+    dir: String,
     #[clap(
         long,
         action,
@@ -39,9 +41,15 @@ fn main() {
 
     let html = render(&src, !args.r#unsafe);
 
-    let mut out_file = PathBuf::from(args.outdir);
-    out_file.push(inp_file);
-    out_file.set_extension("html");
+    let out_file = args.out.map_or_else(
+        || {
+            let mut out = PathBuf::from(args.dir);
+            out.push(inp_file);
+            out.set_extension("html");
+            out
+        },
+        PathBuf::from,
+    );
 
     match fs::write(out_file, html) {
         Ok(()) => {}
