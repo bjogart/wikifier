@@ -1,6 +1,5 @@
 #![feature(iter_intersperse)]
 
-use std::env;
 use std::fs;
 use std::path::PathBuf;
 
@@ -18,8 +17,8 @@ mod wiki;
 struct Args {
     #[clap(value_parser)]
     file: String,
-    #[clap(short, long, value_parser, help("Output file path"))]
-    out: Option<String>,
+    #[clap(value_parser, help("Output file path"))]
+    output: Option<String>,
     #[clap(
         long,
         action,
@@ -40,7 +39,7 @@ fn main() {
 
     let html = render(&src, !args.r#unsafe);
 
-    let out_file = args.out.map_or_else(|| inp_file.with_extension("html"), PathBuf::from);
+    let out_file = args.output.map_or_else(|| inp_file.with_extension("html"), PathBuf::from);
 
     match fs::write(&out_file, html) {
         Ok(()) => {}
