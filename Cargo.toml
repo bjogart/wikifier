@@ -1,0 +1,8 @@
+[package]
+name = "wikifier"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "3.2.20", features = ["derive"] }
+markdown-it = "0.2.0"
