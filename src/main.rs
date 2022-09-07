@@ -17,9 +17,13 @@ mod wiki;
 struct Args {
     #[clap(value_parser)]
     file: String,
-    #[clap(short, long, value_parser, help("Output file"))]
-    output: Option<String>,
-    #[clap(long, action, help(r#"Include unsafe information (everything not between ("%%%")"#))]
+    #[clap(short, long, value_parser, default_value = "", help("Output directory"))]
+    outdir: String,
+    #[clap(
+        long,
+        action,
+        help(r#"Include unsafe information (everything not sandwiched by "%%%""#)
+    )]
     r#unsafe: bool,
 }
 
@@ -35,7 +39,10 @@ fn main() {
 
     let html = render(&src, !args.r#unsafe);
 
-    let out_file = args.output.map_or_else(|| inp_file.with_extension("html"), PathBuf::from);
+    let mut out_file = PathBuf::from(args.outdir);
+    out_file.push(inp_file);
+    out_file.set_extension("html");
+
     match fs::write(out_file, html) {
         Ok(()) => {}
         Err(err) => panic!("{err}"),
