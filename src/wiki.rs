@@ -50,7 +50,8 @@ impl NodeValue for WikiLink {
     fn render(&self, node: &Node, fmt: &mut dyn Renderer) {
         let mut attrs = node.attrs.clone();
 
-        let file: String = self.file.split_ascii_whitespace().intersperse("_").collect();
+        let s: String = self.file.split_ascii_whitespace().intersperse("_").collect();
+        let file = s.to_ascii_lowercase().replace('\'', "");
         let path = format!("./{file}.html");
         attrs.push(("href", path));
 
