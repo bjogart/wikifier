@@ -1,4 +1,4 @@
-# Wikifier
+# Wikify
 
 A really simple markdown-to-HTML converter built on top of the great [markdown-it](https://github.com/rlidwka/markdown-it.rs). Has all the features of CommonMark, with some extensions:
 
