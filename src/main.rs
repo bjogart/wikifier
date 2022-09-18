@@ -63,12 +63,8 @@ fn find_input_files(dir: &Path) -> impl Iterator<Item = PathBuf> {
             Err(e) => Either::Right(e),
         });
 
-    if !inp_errs.is_empty() {
-        eprintln!("{}", "there were file errors.".on_red());
-
-        for err in inp_errs {
-            eprintln!("- {}", err.to_string().red());
-        }
+    for err in inp_errs {
+        eprintln!("file error: {}", err.to_string().red());
     }
 
     inp_entries.into_iter().filter_map(|e| {
@@ -85,7 +81,6 @@ fn find_or_make_out_dir(arg: String) -> PathBuf {
 
 fn render_md_file(md: &MdRenderer, out_dir: &Path, file: &Path) {
     let dest = out_dir.join(file.with_extension(HTML_EXT).file_name().unwrap());
-    println!("render '{}' to '{}'", file.display(), dest.display());
 
     match fs::read_to_string(&file) {
         Err(err) => {
@@ -106,7 +101,6 @@ fn render_md_file(md: &MdRenderer, out_dir: &Path, file: &Path) {
 fn copy_file(out_dir: &Path, file: &Path) {
     let dest = out_dir.join(file.file_name().unwrap());
     let cp = format!("'{}' to '{}'", file.display(), dest.display());
-    println!("copy {cp}");
 
     if let Err(err) = fs::copy(file, dest) {
         let msg = format!("cannot copy {cp}: {err}").red();
