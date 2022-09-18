@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use markdown_it::plugins::cmark;
+use markdown_it::plugins::extra;
 use markdown_it::MarkdownIt;
 
 use crate::wiki;
@@ -17,6 +18,7 @@ impl MdRenderer {
         let mut md = MarkdownIt::new();
 
         cmark::add(&mut md);
+        extra::add(&mut md);
         wiki::add_links(&mut md);
         wiki::add_validation(&mut md, dir);
 
