@@ -1,9 +1,12 @@
+use itertools::intersperse;
 use markdown_it::parser::inline;
 use markdown_it::parser::inline::InlineRule;
 use markdown_it::MarkdownIt;
 use markdown_it::Node;
 use markdown_it::NodeValue;
 use markdown_it::Renderer;
+
+use crate::md::HTML_EXT;
 
 const START: &str = "[[";
 const SEP: char = '|';
@@ -12,13 +15,19 @@ const END: &str = "]]";
 struct WikiScanner;
 
 #[derive(Debug)]
-struct WikiLink {
-    disp: String,
-    file: String,
+pub struct WikiLink {
+    pub disp: String,
+    pub file: String,
 }
 
 pub fn add(md: &mut MarkdownIt) {
     md.inline.add_rule::<WikiScanner>();
+}
+
+pub fn link_to_filename(s: &str, ext: &str) -> String {
+    let despaced: String = intersperse(s.split_ascii_whitespace(), "_").collect();
+    let dequoted = despaced.to_ascii_lowercase().replace('\'', "");
+    format!("./{dequoted}.{ext}")
 }
 
 impl InlineRule for WikiScanner {
@@ -50,9 +59,7 @@ impl NodeValue for WikiLink {
     fn render(&self, node: &Node, fmt: &mut dyn Renderer) {
         let mut attrs = node.attrs.clone();
 
-        let s: String = self.file.split_ascii_whitespace().intersperse("_").collect();
-        let file = s.to_ascii_lowercase().replace('\'', "");
-        let path = format!("./{file}.html");
+        let path = link_to_filename(&self.file, HTML_EXT);
         attrs.push(("href", path));
 
         fmt.open("a", &attrs);

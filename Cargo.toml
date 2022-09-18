@@ -7,3 +7,4 @@ edition = "2021"
 clap = { version = "3.2.20", features = ["derive"] }
 markdown-it = "0.2.0"
 itertools = "0.10.4"
+colored = "2.0.0"

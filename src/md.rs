@@ -1,21 +1,24 @@
+use std::path::PathBuf;
+
 use markdown_it::plugins::cmark;
 use markdown_it::MarkdownIt;
 
 use crate::wiki;
 
-pub const MD_EXT:&str = "md";
-pub const HTML_EXT:&str = "html";
+pub const MD_EXT: &str = "md";
+pub const HTML_EXT: &str = "html";
 
 pub struct MdRenderer {
     md: MarkdownIt,
 }
 
 impl MdRenderer {
-    pub fn new() ->Self{
+    pub fn new(dir: PathBuf) -> Self {
         let mut md = MarkdownIt::new();
 
         cmark::add(&mut md);
         wiki::add_links(&mut md);
+        wiki::add_validation(&mut md, dir);
 
         Self { md }
     }

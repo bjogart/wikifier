@@ -1,8 +1,7 @@
-#![feature(iter_intersperse)]
-
 mod md;
 mod wiki;
 
+use colored::Colorize;
 use itertools::Either;
 use itertools::Itertools;
 use std::ffi::OsStr;
@@ -30,18 +29,23 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    let inp_dir =
-        read_dir(args.input_dir).map_err(|err| format!("invalid input directory: {err}")).unwrap();
-    let (inp_entries, inp_errs): (Vec<DirEntry>, Vec<Error>) = inp_dir.partition_map(|e| match e {
-        Ok(e) => Either::Left(e),
-        Err(e) => Either::Right(e),
-    });
+    let inp_dir = PathBuf::from(args.input_dir)
+        .canonicalize()
+        .map_err(|err| format!("invalid input directory: {err}"))
+        .unwrap();
+    let inp_dir_read =
+        read_dir(&inp_dir).map_err(|err| format!("cannot read input directory: {err}")).unwrap();
+    let (inp_entries, inp_errs): (Vec<DirEntry>, Vec<Error>) =
+        inp_dir_read.partition_map(|e| match e {
+            Ok(e) => Either::Left(e),
+            Err(e) => Either::Right(e),
+        });
 
     if !inp_errs.is_empty() {
-        eprintln!("there were file errors.");
+        eprintln!("{}", "there were file errors.".on_red());
 
         for err in inp_errs {
-            eprintln!("- {err}");
+            eprintln!("- {}", err.to_string().red());
         }
     }
 
@@ -54,22 +58,25 @@ fn main() {
     fs::create_dir_all(&out_dir).unwrap();
     let out_dir = out_dir.canonicalize().unwrap();
 
-    let md = MdRenderer::new();
+    let md = MdRenderer::new(inp_dir);
 
     for file in inp_files {
-        let ext = file.extension().unwrap_or(OsStr::new("")).to_string_lossy();
+        let ext = file.extension().unwrap_or_else(|| OsStr::new("")).to_string_lossy();
         if ext.to_lowercase() == MD_EXT {
             let dest = out_dir.join(file.with_extension(HTML_EXT).file_name().unwrap());
             println!("render '{}' to '{}'", file.display(), dest.display());
 
             match fs::read_to_string(&file) {
-                Err(err) => eprintln!("could not read '{}': {err}", file.display()),
+                Err(err) => {
+                    let msg = format!("could not read '{}': {err}", file.display()).red();
+                    eprintln!("{msg}");
+                }
                 Ok(source) => {
                     let res = md.render(&source);
 
-                    match fs::write(&dest, res) {
-                        Err(err) => eprintln!("could not write to '{}': {err}", dest.display()),
-                        Ok(_) => {}
+                    if let Err(err) = fs::write(&dest, res) {
+                        let msg = format!("could not write to '{}': {err}", dest.display()).red();
+                        eprintln!("{msg}");
                     }
                 }
             }
@@ -78,9 +85,9 @@ fn main() {
             let cp = format!("'{}' to '{}'", file.display(), dest.display());
             println!("copy {cp}");
 
-            match fs::copy(file, dest) {
-                Err(err) => eprintln!("cannot copy {cp}: {err}"),
-                Ok(_) => {}
+            if let Err(err) = fs::copy(file, dest) {
+                let msg = format!("cannot copy {cp}: {err}").red();
+                eprintln!("{msg}");
             }
         }
     }
