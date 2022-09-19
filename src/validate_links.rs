@@ -42,8 +42,11 @@ impl CoreRule for ValidLinksRule {
                 let file = format!("{file}.{MD_EXT}");
 
                 if !files.contains(&file) {
-                    let link = format!("'[[{}|{}]]'", node.disp, node.file);
-                    let msg = format!("{link} is not valid link: '{file}' does not exist");
+                    let link = node.link.clone().map_or_else(
+                        || format!("[[{}]]", node.disp),
+                        |l| format!("[[{}|{l}]]", node.disp),
+                    );
+                    let msg = format!("{link} is not valid: '{file}' does not exist");
                     eprintln!("{}", msg.red());
                 }
             } else if let Some(node) = node.cast::<Link>() {
