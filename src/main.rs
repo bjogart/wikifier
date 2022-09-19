@@ -1,5 +1,6 @@
 mod md;
-mod wiki;
+mod validate_links;
+mod wikilinks;
 
 use colored::Colorize;
 use itertools::Either;

@@ -4,7 +4,8 @@ use markdown_it::plugins::cmark;
 use markdown_it::plugins::extra;
 use markdown_it::MarkdownIt;
 
-use crate::wiki;
+use crate::validate_links;
+use crate::wikilinks;
 
 pub const MD_EXT: &str = "md";
 pub const HTML_EXT: &str = "html";
@@ -19,8 +20,8 @@ impl MdRenderer {
 
         cmark::add(&mut md);
         extra::add(&mut md);
-        wiki::add_links(&mut md);
-        wiki::add_validation(&mut md, dir);
+        wikilinks::add(&mut md);
+        validate_links::add(&mut md, dir);
 
         Self { md }
     }

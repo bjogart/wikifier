@@ -17,17 +17,12 @@ struct WikiScanner;
 #[derive(Debug)]
 pub struct WikiLink {
     pub disp: String,
+    pub link: Option<String>,
     pub file: String,
 }
 
 pub fn add(md: &mut MarkdownIt) {
     md.inline.add_rule::<WikiScanner>();
-}
-
-pub fn link_to_filename(s: &str, ext: &str) -> String {
-    let despaced: String = intersperse(s.split_ascii_whitespace(), "_").collect();
-    let dequoted = despaced.to_ascii_lowercase().replace('\'', "");
-    format!("./{dequoted}.{ext}")
 }
 
 impl InlineRule for WikiScanner {
@@ -44,12 +39,21 @@ impl InlineRule for WikiScanner {
 
         let len = end_idx + END.len();
         let inner = &inp[START.len()..end_idx];
-        let node = if let Some((disp, file)) = inner.split_once(SEP) {
-            Node::new(WikiLink { disp: disp.trim().to_string(), file: file.trim().to_string() })
-        } else {
-            let inner = inner.trim().to_string();
-            Node::new(WikiLink { disp: inner.clone(), file: inner })
+
+        let (disp, link) = match inner.split_once(SEP) {
+            Some((disp, link)) => (disp, Some(link)),
+            None => (inner, None),
         };
+
+        let file = link.unwrap_or(disp).to_lowercase().replace('\'', "");
+        let file: String = intersperse(file.split_ascii_whitespace(), "_").collect();
+        let file = format!("{file}.{HTML_EXT}");
+
+        let node = Node::new(WikiLink {
+            disp: disp.trim().to_string(),
+            link: link.map(|l| l.trim().to_string()),
+            file,
+        });
 
         Some((node, len))
     }
@@ -59,8 +63,7 @@ impl NodeValue for WikiLink {
     fn render(&self, node: &Node, fmt: &mut dyn Renderer) {
         let mut attrs = node.attrs.clone();
 
-        let path = link_to_filename(&self.file, HTML_EXT);
-        attrs.push(("href", path));
+        attrs.push(("href", self.file.clone()));
 
         fmt.open("a", &attrs);
         fmt.text(&self.disp);
